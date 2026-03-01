@@ -1,0 +1,93 @@
+# ============================================================
+#  QAMS — unified .gitignore
+# ============================================================
+
+# --- Environment & secrets ----------------------------------
+.env
+.env.backup
+.env.production
+/auth.json
+/storage/*.key
+
+# --- Dependencies -------------------------------------------
+/vendor
+/node_modules
+
+# --- Build & compiled assets --------------------------------
+/public/build
+/public/hot
+/public/storage
+
+# --- Laravel bootstrap cache --------------------------------
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# --- Storage: app -------------------------------------------
+/storage/app/*
+!/storage/app/private/
+!/storage/app/public/
+
+# --- Storage: app/private -----------------------------------
+/storage/app/private/*
+
+# --- Storage: app/public ------------------------------------
+/storage/app/public/*
+
+# --- Storage: framework (specific generated files) ----------
+/storage/framework/compiled.php
+/storage/framework/config.php
+/storage/framework/down
+/storage/framework/events.scanned.php
+/storage/framework/maintenance.php
+/storage/framework/routes.php
+/storage/framework/routes.scanned.php
+/storage/framework/schedule-*
+/storage/framework/services.json
+
+# --- Storage: framework/sessions ----------------------------
+/storage/framework/sessions/*
+
+# --- Storage: framework/views (compiled templates) ----------
+/storage/framework/views/*
+
+# --- Storage: framework/cache -------------------------------
+/storage/framework/cache/*
+!/storage/framework/cache/data/
+
+# --- Storage: framework/cache/data --------------------------
+/storage/framework/cache/data/*
+
+# --- Storage: framework/testing -----------------------------
+/storage/framework/testing/*
+
+# --- Storage: logs ------------------------------------------
+/storage/logs/*
+/storage/pail
+
+# --- Database -----------------------------------------------
+/database/*.sqlite
+/database/*.sqlite-shm
+/database/*.sqlite-wal
+
+# --- IDE & OS -----------------------------------------------
+.DS_Store
+Thumbs.db
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# --- Cursor AI ----------------------------------------------
+.cursorrules
+.cursor/
+
+# --- PHP / Testing ------------------------------------------
+*.log
+.phpactor.json
+.phpunit.result.cache
+/.phpunit.cache
+
+# --- Homestead (legacy VM) ----------------------------------
+Homestead.json
+Homestead.yaml
