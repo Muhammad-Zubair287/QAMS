@@ -80,6 +80,7 @@ Thumbs.db
 
 # --- Cursor AI ----------------------------------------------
 .cursorrules
+.coursorrules
 .cursor/
 
 # --- PHP / Testing ------------------------------------------
