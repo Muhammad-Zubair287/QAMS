@@ -4,11 +4,14 @@
 @section('content')
 <div class="card qams-card">
     <div class="card-header bg-white border-0 py-3">
-        <h6 class="mb-0 fw-bold text-primary">Available Quizzes ({{ $quizzes->count() }})</h6>
+        <h6 class="page-title"><i class="bi bi-ui-checks-grid me-2"></i>Available Quizzes ({{ $quizzes->count() }})</h6>
     </div>
     <div class="card-body p-0">
         @if($quizzes->isEmpty())
-            <p class="text-muted text-center py-5 mb-0">No quizzes available for your enrolled subjects.</p>
+            <div class="empty-state">
+                <div class="icon"><i class="bi bi-inboxes"></i></div>
+                <div>No quizzes available for your enrolled subjects.</div>
+            </div>
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -32,11 +35,11 @@
                             <td>{{ $quiz->deadline_at?->format('d M Y h:i A') ?? '—' }}</td>
                             <td>
                                 @if($attempt)
-                                    <span class="badge bg-success">Attempted</span>
+                                    <span class="badge bg-success status-badge">Attempted</span>
                                 @elseif(now()->gt($quiz->deadline_at))
-                                    <span class="badge bg-danger">Closed</span>
+                                    <span class="badge bg-danger status-badge">Closed</span>
                                 @else
-                                    <span class="badge bg-warning text-dark">Open</span>
+                                    <span class="badge bg-warning text-dark status-badge">Open</span>
                                 @endif
                             </td>
                             <td class="text-end pe-4">

@@ -200,26 +200,6 @@ class ModuleController extends Controller
         $student = $this->getStudent();
         $subjectIds = $student->enrolledSubjects->pluck('id');
 
-        $overdueAssignments = Assignment::whereIn('subject_id', $subjectIds)
-            ->where('deadline_at', '<', Carbon::now())
-            ->whereDoesntHave('submissions', function ($query) use ($student): void {
-                $query->where('student_id', $student->id);
-            })
-            ->select(['id', 'teacher_id'])
-            ->get();
-
-        foreach ($overdueAssignments as $assignment) {
-            AssignmentSubmission::create([
-                'assignment_id' => $assignment->id,
-                'student_id' => $student->id,
-                'score' => 0,
-                'feedback' => 'Auto-assigned zero due to missed deadline.',
-                'graded_by' => $assignment->teacher_id,
-                'graded_at' => Carbon::now(),
-                'published_at' => Carbon::now(),
-            ]);
-        }
-
         $quizAttempts = QuizAttempt::where('student_id', $student->id)
             ->whereHas('quiz', function ($query) use ($subjectIds): void {
                 $query->whereIn('subject_id', $subjectIds);

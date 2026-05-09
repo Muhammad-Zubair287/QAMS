@@ -36,6 +36,32 @@
         }
         .content-wrap { padding: 1.25rem; }
         .qams-card { border: none; border-radius: 14px; box-shadow: var(--qams-card-shadow); }
+        .qams-card .card-header {
+            border-bottom: 1px solid #eef2f7;
+            background: #fff;
+        }
+        .page-title {
+            font-weight: 700;
+            color: var(--qams-navy);
+            margin-bottom: 0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 2.25rem 1rem;
+            color: #6b7280;
+        }
+        .empty-state .icon {
+            font-size: 2rem;
+            color: #94a3b8;
+            margin-bottom: .5rem;
+        }
+        .status-badge {
+            font-size: .72rem;
+            padding: .35rem .55rem;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: .2px;
+        }
         @media (max-width: 991px) {
             #sidebar, .sidebar-brand { position: static; width: 100%; height: auto; }
             #sidebar { padding-top: 0; }

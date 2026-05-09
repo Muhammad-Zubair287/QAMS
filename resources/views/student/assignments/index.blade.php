@@ -4,11 +4,14 @@
 @section('content')
 <div class="card qams-card">
     <div class="card-header bg-white border-0 py-3">
-        <h6 class="mb-0 fw-bold text-primary">Assignments ({{ $assignments->count() }})</h6>
+        <h6 class="page-title"><i class="bi bi-file-earmark-text me-2"></i>Assignments ({{ $assignments->count() }})</h6>
     </div>
     <div class="card-body">
         @if($assignments->isEmpty())
-            <p class="text-muted mb-0">No assignments available for your enrolled subjects.</p>
+            <div class="empty-state">
+                <div class="icon"><i class="bi bi-journal-x"></i></div>
+                <div>No assignments available for your enrolled subjects.</div>
+            </div>
         @else
             @foreach($assignments as $assignment)
                 @php $submission = $assignment->submissions->first(); @endphp
@@ -24,11 +27,11 @@
                         </div>
                         <div>
                             @if($submission)
-                                <span class="badge bg-success">Submitted</span>
+                                <span class="badge bg-success status-badge">Submitted</span>
                             @elseif(now()->gt($assignment->deadline_at))
-                                <span class="badge bg-danger">Missed Deadline</span>
+                                <span class="badge bg-danger status-badge">Missed Deadline</span>
                             @else
-                                <span class="badge bg-warning text-dark">Pending</span>
+                                <span class="badge bg-warning text-dark status-badge">Pending</span>
                             @endif
                         </div>
                     </div>

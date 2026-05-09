@@ -4,7 +4,7 @@
 @section('content')
 <div class="card qams-card mb-4">
     <div class="card-body p-4">
-        <h4 class="fw-bold text-primary mb-2"><i class="bi bi-mortarboard me-2"></i>Welcome, {{ $student->name }}</h4>
+        <h4 class="page-title mb-2"><i class="bi bi-mortarboard me-2"></i>Welcome, {{ $student->name }}</h4>
         <p class="text-muted mb-0">Access quizzes, submit assignments before deadlines, and view published results.</p>
     </div>
 </div>

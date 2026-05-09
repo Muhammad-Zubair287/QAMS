@@ -23,11 +23,14 @@
 
 <div class="card qams-card mb-4">
     <div class="card-header bg-white border-0 py-3">
-        <h6 class="mb-0 fw-bold text-primary">Quiz Results</h6>
+        <h6 class="page-title"><i class="bi bi-bar-chart-steps me-2"></i>Quiz Results</h6>
     </div>
     <div class="card-body p-0">
         @if($quizAttempts->isEmpty())
-            <p class="text-muted text-center py-4 mb-0">No quiz attempts found.</p>
+            <div class="empty-state">
+                <div class="icon"><i class="bi bi-clipboard-x"></i></div>
+                <div>No quiz attempts found.</div>
+            </div>
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -49,9 +52,9 @@
                             <td>{{ $attempt->submitted_at?->format('d M Y h:i A') ?? '—' }}</td>
                             <td>
                                 @if($attempt->published_at)
-                                    <span class="badge bg-success">Published</span>
+                                    <span class="badge bg-success status-badge">Published</span>
                                 @else
-                                    <span class="badge bg-warning text-dark">Awaiting Publish</span>
+                                    <span class="badge bg-warning text-dark status-badge">Awaiting Publish</span>
                                 @endif
                             </td>
                         </tr>
@@ -65,11 +68,14 @@
 
 <div class="card qams-card">
     <div class="card-header bg-white border-0 py-3">
-        <h6 class="mb-0 fw-bold text-primary">Assignment Results</h6>
+        <h6 class="page-title"><i class="bi bi-clipboard2-check me-2"></i>Assignment Results</h6>
     </div>
     <div class="card-body p-0">
         @if($assignmentSubmissions->isEmpty())
-            <p class="text-muted text-center py-4 mb-0">No assignment submission records found.</p>
+            <div class="empty-state">
+                <div class="icon"><i class="bi bi-file-earmark-x"></i></div>
+                <div>No assignment submission records found.</div>
+            </div>
         @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -89,17 +95,17 @@
                             <td>{{ $submission->assignment?->subject?->name ?? '—' }}</td>
                             <td>
                                 @if($submission->score !== null)
-                                    <span class="badge bg-success-subtle text-success">{{ $submission->score }}</span>
+                                    <span class="badge bg-success-subtle text-success status-badge">{{ $submission->score }}</span>
                                 @else
-                                    <span class="badge bg-secondary-subtle text-secondary">Pending</span>
+                                    <span class="badge bg-secondary-subtle text-secondary status-badge">Pending</span>
                                 @endif
                             </td>
                             <td>{{ $submission->feedback ?? '—' }}</td>
                             <td>
                                 @if($submission->published_at)
-                                    <span class="badge bg-success">Published</span>
+                                    <span class="badge bg-success status-badge">Published</span>
                                 @else
-                                    <span class="badge bg-warning text-dark">Awaiting Publish</span>
+                                    <span class="badge bg-warning text-dark status-badge">Awaiting Publish</span>
                                 @endif
                             </td>
                         </tr>
