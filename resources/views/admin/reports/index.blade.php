@@ -163,7 +163,7 @@
                     <tr>
                         <td class="ps-4 text-muted small">{{ $i + 1 }}</td>
                         <td class="fw-semibold">{{ $teacher->name }}</td>
-                        <td class="small text-muted">{{ $teacher->username }}</td>
+                        <td class="small text-muted">{{ $teacher->user_name }}</td>
                         <td class="small">{{ $detail ? Str::limit($detail->education, 50) : '—' }}</td>
                         <td>
                             @foreach($teacher->teachingSubjects as $subj)
