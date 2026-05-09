@@ -7,6 +7,10 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
+use App\Http\Controllers\Teacher\ModuleController as TeacherModuleController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\ModuleController as StudentModuleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -113,13 +117,43 @@ Route::middleware('auth')->group(function () {
             Route::get('/reports',              [ReportController::class, 'index'])->name('reports.index');
         });
 
-    // ── Teacher Dashboard (placeholder for now) ───────────────────────────────
+    // ── Teacher Routes (only role=teacher) ────────────────────────────────────
     Route::middleware('role:teacher')
-        ->get('/teacher/dashboard', fn () => view('teacher.dashboard'))
-        ->name('teacher.dashboard');
+        ->prefix('teacher')
+        ->name('teacher.')
+        ->group(function () {
+            Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/question-bank', [TeacherModuleController::class, 'questionBank'])->name('question-bank.index');
+            Route::post('/question-bank', [TeacherModuleController::class, 'storeQuestion'])->name('question-bank.store');
 
-    // ── Student Dashboard (placeholder for now) ───────────────────────────────
+            Route::get('/quizzes', [TeacherModuleController::class, 'quizzes'])->name('quizzes.index');
+            Route::post('/quizzes', [TeacherModuleController::class, 'storeQuiz'])->name('quizzes.store');
+            Route::patch('/quizzes/{quiz}/deadline', [TeacherModuleController::class, 'extendQuizDeadline'])->name('quizzes.extend-deadline');
+
+            Route::get('/assignments', [TeacherModuleController::class, 'assignments'])->name('assignments.index');
+            Route::post('/assignments', [TeacherModuleController::class, 'storeAssignment'])->name('assignments.store');
+            Route::patch('/assignments/{assignment}/deadline', [TeacherModuleController::class, 'extendAssignmentDeadline'])->name('assignments.extend-deadline');
+
+            Route::get('/results', [TeacherModuleController::class, 'results'])->name('results.index');
+            Route::post('/results/publish-quizzes', [TeacherModuleController::class, 'publishQuizResults'])->name('results.publish-quizzes');
+            Route::post('/results/assignment-submissions/{submission}/grade', [TeacherModuleController::class, 'gradeAssignmentSubmission'])->name('results.grade-assignment');
+
+            Route::get('/performance', [TeacherModuleController::class, 'performance'])->name('performance.index');
+        });
+
+    // ── Student Routes (only role=student) ────────────────────────────────────
     Route::middleware('role:student')
-        ->get('/student/dashboard', fn () => view('student.dashboard'))
-        ->name('student.dashboard');
+        ->prefix('student')
+        ->name('student.')
+        ->group(function () {
+            Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/quizzes', [StudentModuleController::class, 'quizzes'])->name('quizzes.index');
+            Route::get('/quizzes/{quiz}/attempt', [StudentModuleController::class, 'attemptQuiz'])->name('quizzes.attempt');
+            Route::post('/quizzes/{quiz}/submit', [StudentModuleController::class, 'submitQuiz'])->name('quizzes.submit');
+
+            Route::get('/assignments', [StudentModuleController::class, 'assignments'])->name('assignments.index');
+            Route::post('/assignments/{assignment}/submit', [StudentModuleController::class, 'submitAssignment'])->name('assignments.submit');
+
+            Route::get('/results', [StudentModuleController::class, 'results'])->name('results.index');
+        });
 });

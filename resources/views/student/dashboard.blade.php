@@ -1,16 +1,29 @@
-{{-- Student Dashboard — QAMS (Placeholder for Prototype) --}}
-@extends('layouts.app')
+@extends('layouts.student')
 @section('title', 'Student Dashboard')
 
 @section('content')
-<div class="text-center py-5">
-    <i class="bi bi-person-video3 display-1 text-success"></i>
-    <h3 class="fw-bold mt-3">Welcome, {{ auth()->user()->name }}!</h3>
-    <p class="text-muted">Student features will be built in the next phase.</p>
-    <div class="mt-4">
-        <span class="badge bg-success fs-6 px-4 py-2">
-            <i class="bi bi-tools me-2"></i>Coming Soon: Attempt Quizzes, Submit Assignments, View Results
-        </span>
+<div class="card qams-card mb-4">
+    <div class="card-body p-4">
+        <h4 class="fw-bold text-primary mb-2"><i class="bi bi-mortarboard me-2"></i>Welcome, {{ $student->name }}</h4>
+        <p class="text-muted mb-0">Access quizzes, submit assignments before deadlines, and view published results.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-6 col-lg-4">
+        <div class="card qams-card"><div class="card-body"><div class="small text-muted">Enrolled Subjects</div><div class="h4 fw-bold text-primary mb-0">{{ $summary['enrolled_subjects'] }}</div></div></div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card qams-card"><div class="card-body"><div class="small text-muted">Available Quizzes</div><div class="h4 fw-bold text-success mb-0">{{ $summary['available_quizzes'] }}</div></div></div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card qams-card"><div class="card-body"><div class="small text-muted">Pending Assignments</div><div class="h4 fw-bold text-warning mb-0">{{ $summary['pending_assignments'] }}</div></div></div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card qams-card"><div class="card-body"><div class="small text-muted">Attempted Quizzes</div><div class="h4 fw-bold text-info mb-0">{{ $summary['attempted_quizzes'] }}</div></div></div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card qams-card"><div class="card-body"><div class="small text-muted">Submitted Assignments</div><div class="h4 fw-bold" style="color:#7c3aed">{{ $summary['submitted_assignments'] }}</div></div></div>
     </div>
 </div>
 @endsection
