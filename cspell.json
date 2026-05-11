@@ -4,6 +4,17 @@
   "words": [
     "QAMS",
     "qams",
-    "endsection"
+    "endsection",
+    "endphp",
+    "endpush",
+    "onsubmit",
+    "addslashes",
+    "endforeach",
+    "csrf",
+    "blade",
+    "bi",
+    "full_name",
+    "user_name",
+    "qams-card"
   ]
 }
