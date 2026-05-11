@@ -342,9 +342,9 @@
             <span class="nav-label">Add User</span>
         </a>
 
-        <a href="{{ route('admin.dashboard', ['status'=>'blocked']) }}"
-           class="nav-item-link {{ request()->get('status')==='blocked' ? 'active' : '' }}"
-           data-tooltip="Blocked Accounts">
+          <a href="{{ route('admin.dashboard', ['status'=>'blocked']) }}"
+              class="nav-item-link {{ request()->input('status') === 'blocked' ? 'active' : '' }}"
+              data-tooltip="Blocked Accounts">
             <i class="bi bi-person-slash nav-icon"></i>
             <span class="nav-label">Blocked Accounts</span>
         </a>
