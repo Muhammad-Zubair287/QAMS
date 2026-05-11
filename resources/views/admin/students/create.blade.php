@@ -1,7 +1,7 @@
 {{-- Admin: Register Student — QAMS --}}
 @php
 /** @var \Illuminate\Support\Collection|\App\Models\Subject[] $subjects */
-/** @var \Illuminate\Support\Collection|\App\Models\Classes[] $classes */
+/** @var \Illuminate\Support\Collection|\App\Models\SchoolClass[] $classes */
 @endphp
 @extends('layouts.admin')
 @section('title', 'Register Student')

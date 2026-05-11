@@ -2,7 +2,7 @@
 @php
 /** @var \App\Models\User $student */
 /** @var \Illuminate\Support\Collection|\App\Models\Subject[] $subjects */
-/** @var \Illuminate\Support\Collection|\App\Models\Classes[] $classes */
+/** @var \Illuminate\Support\Collection|\App\Models\SchoolClass[] $classes */
 /** @var int[] $enrolledIds */
 @endphp
 @extends('layouts.admin')

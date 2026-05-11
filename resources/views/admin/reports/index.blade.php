@@ -1,4 +1,10 @@
 {{-- Admin: Reports — QAMS --}}
+@php
+/** @var array $summary */
+/** @var \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $students */
+/** @var \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $teachers */
+/** @var \Illuminate\Database\Eloquent\Collection|\App\Models\SchoolClass[] $classes */
+@endphp
 @extends('layouts.admin')
 @section('title', 'Reports')
 

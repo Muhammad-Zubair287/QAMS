@@ -1,7 +1,7 @@
 {{-- Admin: Edit Subject — QAMS --}}
 @php
 /** @var \App\Models\Subject $subject */
-/** @var \Illuminate\Support\Collection|\App\Models\Classes[] $classes */
+/** @var \Illuminate\Support\Collection|\App\Models\SchoolClass[] $classes */
 @endphp
 @extends('layouts.admin')
 @section('title', 'Edit Subject')
