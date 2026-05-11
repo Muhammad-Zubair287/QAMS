@@ -3,6 +3,32 @@
 
 @section('content')
 <div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-3">
+        <a href="{{ route('student.results.index') }}" class="text-decoration-none">
+            <div class="card qams-card h-100 {{ $selectedSubjectId === 0 ? 'border border-primary' : '' }}">
+                <div class="card-body">
+                    <div class="small text-muted">All Subjects</div>
+                    <div class="fw-bold text-primary">Overall Results</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @foreach($enrolledSubjects as $subject)
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ route('student.results.index', ['subject_id' => $subject['id']]) }}" class="text-decoration-none">
+                <div class="card qams-card h-100 {{ $selectedSubjectId === $subject['id'] ? 'border border-primary' : '' }}">
+                    <div class="card-body">
+                        <div class="small text-muted">{{ $subject['quiz_attempt_count'] }} quizzes</div>
+                        <div class="fw-bold text-primary">{{ $subject['name'] }}</div>
+                        <div class="small text-success">{{ $subject['assignment_count'] }} assignments</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endforeach
+</div>
+
+<div class="row g-3 mb-4">
     <div class="col-md-6">
         <div class="card qams-card">
             <div class="card-body text-center">

@@ -2,6 +2,32 @@
 @section('title', 'Performance Reports')
 
 @section('content')
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-3">
+        <a href="{{ route('teacher.performance.index') }}" class="text-decoration-none">
+            <div class="card qams-card h-100 {{ $selectedSubjectId === 0 ? 'border border-primary' : '' }}">
+                <div class="card-body">
+                    <div class="small text-muted">All Subjects</div>
+                    <div class="fw-bold text-primary">Overall Performance</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @foreach($subjectCards as $subjectCard)
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ route('teacher.performance.index', ['subject_id' => $subjectCard['id']]) }}" class="text-decoration-none">
+                <div class="card qams-card h-100 {{ $selectedSubjectId === $subjectCard['id'] ? 'border border-primary' : '' }}">
+                    <div class="card-body">
+                        <div class="small text-muted">{{ $subjectCard['quiz_attempt_count'] }} attempts</div>
+                        <div class="fw-bold text-primary">{{ $subjectCard['name'] }}</div>
+                        <div class="small text-success">{{ $subjectCard['assignment_submission_count'] }} submissions</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endforeach
+</div>
+
 <div class="card qams-card mb-4">
     <div class="card-body p-4">
         <h5 class="fw-bold text-primary mb-2"><i class="bi bi-graph-up-arrow me-2"></i>Performance Reports</h5>

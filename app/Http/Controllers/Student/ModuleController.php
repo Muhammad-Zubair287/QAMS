@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ModuleController extends Controller
@@ -36,21 +35,78 @@ class ModuleController extends Controller
         return $student->enrolledSubjects->contains('id', $subjectId);
     }
 
-    public function quizzes(): View
+    private function now(): Carbon
+    {
+        return Carbon::now(config('app.timezone'));
+    }
+
+    private function applyAutoZeroForOverdueAssignments(User $student): void
+    {
+        $subjectIds = $student->enrolledSubjects->pluck('id');
+
+        $overdueAssignments = Assignment::whereIn('subject_id', $subjectIds)
+            ->where('deadline_at', '<', $this->now())
+            ->whereDoesntHave('submissions', function ($query) use ($student): void {
+                $query->where('student_id', $student->id);
+            })
+            ->select(['id', 'teacher_id'])
+            ->get();
+
+        foreach ($overdueAssignments as $assignment) {
+            AssignmentSubmission::create([
+                'assignment_id' => $assignment->id,
+                'student_id' => $student->id,
+                'score' => 0,
+                'feedback' => 'Auto-assigned zero due to missed deadline.',
+                'graded_by' => $assignment->teacher_id,
+                'graded_at' => $this->now(),
+                'published_at' => $this->now(),
+            ]);
+        }
+    }
+
+    public function quizzes(Request $request): View
     {
         $student = $this->getStudent();
         $subjectIds = $student->enrolledSubjects->pluck('id');
+        $selectedSubjectId = (int) $request->integer('subject_id');
 
-        $quizzes = Quiz::whereIn('subject_id', $subjectIds)
+        if ($selectedSubjectId !== 0 && !$subjectIds->contains($selectedSubjectId)) {
+            $selectedSubjectId = 0;
+        }
+
+        $enrolledSubjects = $student->enrolledSubjects->map(function ($subject) use ($student) {
+            $quizCount = Quiz::where('subject_id', $subject->id)->count();
+            $attemptedCount = QuizAttempt::where('student_id', $student->id)
+                ->whereHas('quiz', function ($query) use ($subject): void {
+                    $query->where('subject_id', $subject->id);
+                })
+                ->count();
+
+            return [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'quiz_count' => $quizCount,
+                'attempted_count' => $attemptedCount,
+            ];
+        });
+
+        $quizzesQuery = Quiz::whereIn('subject_id', $subjectIds)
             ->select(['id', 'subject_id', 'teacher_id', 'title', 'duration_minutes', 'start_at', 'deadline_at'])
             ->with(['subject:id,name,class_id', 'teacher:id,name'])
             ->with(['attempts' => function ($query) use ($student): void {
                 $query->where('student_id', $student->id)->select(['id', 'quiz_id', 'student_id', 'score', 'total_marks', 'published_at']);
-            }])
-            ->orderBy('deadline_at')
-            ->get();
+            }]);
 
-        return view('student.quizzes.index', compact('student', 'quizzes'));
+        if ($selectedSubjectId !== 0) {
+            $quizzesQuery->where('subject_id', $selectedSubjectId);
+        }
+
+        $quizzes = $quizzesQuery->orderBy('deadline_at')->get();
+
+        $currentTime = $this->now();
+
+        return view('student.quizzes.index', compact('student', 'quizzes', 'enrolledSubjects', 'selectedSubjectId', 'currentTime'));
     }
 
     public function attemptQuiz(Quiz $quiz): View|RedirectResponse
@@ -61,7 +117,7 @@ class ModuleController extends Controller
             return redirect()->route('student.quizzes.index')->withErrors(['error' => 'You can only attempt quizzes for your enrolled subjects.']);
         }
 
-        if (Carbon::now()->gt($quiz->deadline_at)) {
+        if ($this->now()->gt($quiz->deadline_at)) {
             return redirect()->route('student.quizzes.index')->withErrors(['error' => 'This quiz deadline has passed.']);
         }
 
@@ -87,7 +143,7 @@ class ModuleController extends Controller
             return back()->withErrors(['error' => 'You can only submit quizzes for your enrolled subjects.']);
         }
 
-        if (Carbon::now()->gt($quiz->deadline_at)) {
+        if ($this->now()->gt($quiz->deadline_at)) {
             return back()->withErrors(['error' => 'Quiz deadline has passed.']);
         }
 
@@ -125,29 +181,56 @@ class ModuleController extends Controller
             'student_id' => $student->id,
             'score' => $score,
             'total_marks' => $total,
-            'started_at' => Carbon::now(),
-            'submitted_at' => Carbon::now(),
+            'started_at' => $this->now(),
+            'submitted_at' => $this->now(),
         ]);
 
         return redirect()->route('student.results.index')->with('success', 'Quiz submitted and auto-marked successfully.');
     }
 
-    public function assignments(): View
+    public function assignments(Request $request): View
     {
         $student = $this->getStudent();
+        $this->applyAutoZeroForOverdueAssignments($student);
         $subjectIds = $student->enrolledSubjects->pluck('id');
+        $selectedSubjectId = (int) $request->integer('subject_id');
 
-        $assignments = Assignment::whereIn('subject_id', $subjectIds)
+        if ($selectedSubjectId !== 0 && !$subjectIds->contains($selectedSubjectId)) {
+            $selectedSubjectId = 0;
+        }
+
+        $enrolledSubjects = $student->enrolledSubjects->map(function ($subject) use ($student) {
+            $assignmentCount = Assignment::where('subject_id', $subject->id)->count();
+            $submittedCount = AssignmentSubmission::where('student_id', $student->id)
+                ->whereHas('assignment', function ($query) use ($subject): void {
+                    $query->where('subject_id', $subject->id);
+                })
+                ->count();
+
+            return [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'assignment_count' => $assignmentCount,
+                'submitted_count' => $submittedCount,
+            ];
+        });
+
+        $assignmentsQuery = Assignment::whereIn('subject_id', $subjectIds)
             ->select(['id', 'subject_id', 'teacher_id', 'title', 'description', 'deadline_at'])
             ->with(['subject:id,name,class_id', 'teacher:id,name'])
             ->with(['submissions' => function ($query) use ($student): void {
                 $query->where('student_id', $student->id)
                     ->select(['id', 'assignment_id', 'student_id', 'submitted_at', 'score', 'published_at']);
-            }])
-            ->orderBy('deadline_at')
-            ->get();
+            }]);
 
-        return view('student.assignments.index', compact('student', 'assignments'));
+        if ($selectedSubjectId !== 0) {
+            $assignmentsQuery->where('subject_id', $selectedSubjectId);
+        }
+
+        $assignments = $assignmentsQuery->orderBy('deadline_at')->get();
+
+        $currentTime = $this->now();
+        return view('student.assignments.index', compact('student', 'assignments', 'currentTime', 'enrolledSubjects', 'selectedSubjectId'));
     }
 
     public function submitAssignment(Request $request, Assignment $assignment): RedirectResponse
@@ -158,7 +241,8 @@ class ModuleController extends Controller
             return back()->withErrors(['error' => 'You can only submit assignments for your enrolled subjects.']);
         }
 
-        if (Carbon::now()->gt($assignment->deadline_at)) {
+        if ($this->now()->gt($assignment->deadline_at)) {
+            $this->applyAutoZeroForOverdueAssignments($student);
             return back()->withErrors(['error' => 'Assignment deadline has passed.']);
         }
 
@@ -189,35 +273,82 @@ class ModuleController extends Controller
             'student_id' => $student->id,
             'solution_text' => $validated['solution_text'] ?? null,
             'solution_file' => $filePath,
-            'submitted_at' => Carbon::now(),
+            'submitted_at' => $this->now(),
         ]);
 
         return back()->with('success', 'Assignment submitted successfully.');
     }
 
-    public function results(): View
+    public function results(Request $request): View
     {
         $student = $this->getStudent();
+        $this->applyAutoZeroForOverdueAssignments($student);
         $subjectIds = $student->enrolledSubjects->pluck('id');
+        $selectedSubjectId = (int) $request->integer('subject_id');
 
-        $quizAttempts = QuizAttempt::where('student_id', $student->id)
+        if ($selectedSubjectId !== 0 && !$subjectIds->contains($selectedSubjectId)) {
+            $selectedSubjectId = 0;
+        }
+
+        $enrolledSubjects = $student->enrolledSubjects->map(function ($subject) use ($student) {
+            $quizAttemptCount = QuizAttempt::where('student_id', $student->id)
+                ->whereHas('quiz', function ($query) use ($subject): void {
+                    $query->where('subject_id', $subject->id);
+                })
+                ->count();
+
+            $assignmentCount = AssignmentSubmission::where('student_id', $student->id)
+                ->whereHas('assignment', function ($query) use ($subject): void {
+                    $query->where('subject_id', $subject->id);
+                })
+                ->count();
+
+            return [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'quiz_attempt_count' => $quizAttemptCount,
+                'assignment_count' => $assignmentCount,
+            ];
+        });
+
+        $quizAttemptsQuery = QuizAttempt::where('student_id', $student->id)
             ->whereHas('quiz', function ($query) use ($subjectIds): void {
                 $query->whereIn('subject_id', $subjectIds);
             })
             ->select(['id', 'quiz_id', 'score', 'total_marks', 'submitted_at', 'published_at'])
             ->with(['quiz:id,title,subject_id', 'quiz.subject:id,name,class_id'])
-            ->orderByDesc('submitted_at')
-            ->get();
+            ->orderByDesc('submitted_at');
 
-        $assignmentSubmissions = AssignmentSubmission::where('student_id', $student->id)
+        if ($selectedSubjectId !== 0) {
+            $quizAttemptsQuery->whereHas('quiz', function ($query) use ($selectedSubjectId): void {
+                $query->where('subject_id', $selectedSubjectId);
+            });
+        }
+
+        $quizAttempts = $quizAttemptsQuery->get();
+
+        $assignmentSubmissionsQuery = AssignmentSubmission::where('student_id', $student->id)
             ->whereHas('assignment', function ($query) use ($subjectIds): void {
                 $query->whereIn('subject_id', $subjectIds);
             })
             ->select(['id', 'assignment_id', 'score', 'feedback', 'solution_file', 'submitted_at', 'published_at'])
             ->with(['assignment:id,title,subject_id', 'assignment.subject:id,name,class_id'])
-            ->orderByDesc(DB::raw('COALESCE(submitted_at, created_at)'))
-            ->get();
+            ->orderByDesc(DB::raw('COALESCE(submitted_at, created_at)'));
 
-        return view('student.results.index', compact('student', 'quizAttempts', 'assignmentSubmissions'));
+        if ($selectedSubjectId !== 0) {
+            $assignmentSubmissionsQuery->whereHas('assignment', function ($query) use ($selectedSubjectId): void {
+                $query->where('subject_id', $selectedSubjectId);
+            });
+        }
+
+        $assignmentSubmissions = $assignmentSubmissionsQuery->get();
+
+        return view('student.results.index', compact(
+            'student',
+            'quizAttempts',
+            'assignmentSubmissions',
+            'enrolledSubjects',
+            'selectedSubjectId'
+        ));
     }
 }

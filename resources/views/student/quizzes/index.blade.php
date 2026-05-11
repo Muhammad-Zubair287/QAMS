@@ -2,9 +2,42 @@
 @section('title', 'Quizzes')
 
 @section('content')
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-3">
+        <a href="{{ route('student.quizzes.index') }}" class="text-decoration-none">
+            <div class="card qams-card h-100 {{ $selectedSubjectId === 0 ? 'border border-primary' : '' }}">
+                <div class="card-body">
+                    <div class="small text-muted">All Subjects</div>
+                    <div class="fw-bold text-primary">All Quizzes</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @foreach($enrolledSubjects as $subject)
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ route('student.quizzes.index', ['subject_id' => $subject['id']]) }}" class="text-decoration-none">
+                <div class="card qams-card h-100 {{ $selectedSubjectId === $subject['id'] ? 'border border-primary' : '' }}">
+                    <div class="card-body">
+                        <div class="small text-muted">{{ $subject['quiz_count'] }} Quiz(s)</div>
+                        <div class="fw-bold text-primary">{{ $subject['name'] }}</div>
+                        <div class="small text-success">{{ $subject['attempted_count'] }} attempted</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endforeach
+</div>
+
 <div class="card qams-card">
     <div class="card-header bg-white border-0 py-3">
-        <h6 class="page-title"><i class="bi bi-ui-checks-grid me-2"></i>Available Quizzes ({{ $quizzes->count() }})</h6>
+        <h6 class="page-title">
+            <i class="bi bi-ui-checks-grid me-2"></i>
+            @if($selectedSubjectId === 0)
+                Available Quizzes ({{ $quizzes->count() }})
+            @else
+                Subject Quizzes ({{ $quizzes->count() }})
+            @endif
+        </h6>
     </div>
     <div class="card-body p-0">
         @if($quizzes->isEmpty())
@@ -36,14 +69,14 @@
                             <td>
                                 @if($attempt)
                                     <span class="badge bg-success status-badge">Attempted</span>
-                                @elseif(now()->gt($quiz->deadline_at))
+                                @elseif($currentTime->gt($quiz->deadline_at))
                                     <span class="badge bg-danger status-badge">Closed</span>
                                 @else
                                     <span class="badge bg-warning text-dark status-badge">Open</span>
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                @if(!$attempt && now()->lte($quiz->deadline_at))
+                                @if(!$attempt && $currentTime->lte($quiz->deadline_at))
                                     <a href="{{ route('student.quizzes.attempt', $quiz->id) }}" class="btn btn-primary btn-sm">Attempt</a>
                                 @elseif($attempt)
                                     <span class="badge bg-info-subtle text-info">{{ $attempt->score }}/{{ $attempt->total_marks }}</span>

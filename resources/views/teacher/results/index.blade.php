@@ -2,11 +2,37 @@
 @section('title', 'Results Publish')
 
 @section('content')
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-3">
+        <a href="{{ route('teacher.results.index') }}" class="text-decoration-none">
+            <div class="card qams-card h-100 {{ $selectedSubjectId === 0 ? 'border border-primary' : '' }}">
+                <div class="card-body">
+                    <div class="small text-muted">All Subjects</div>
+                    <div class="fw-bold text-primary">Overall Results</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    @foreach($subjectCards as $subjectCard)
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ route('teacher.results.index', ['subject_id' => $subjectCard['id']]) }}" class="text-decoration-none">
+                <div class="card qams-card h-100 {{ $selectedSubjectId === $subjectCard['id'] ? 'border border-primary' : '' }}">
+                    <div class="card-body">
+                        <div class="small text-muted">{{ $subjectCard['quiz_attempt_count'] }} attempts</div>
+                        <div class="fw-bold text-primary">{{ $subjectCard['name'] }}</div>
+                        <div class="small text-success">{{ $subjectCard['assignment_submission_count'] }} submissions</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endforeach
+</div>
+
 <div class="card qams-card mb-4">
     <div class="card-body p-4">
         <h5 class="fw-bold text-primary mb-2"><i class="bi bi-check2-square me-2"></i>Publish Results</h5>
         <p class="text-muted mb-3">Publish quiz results and grade assignment submissions for your assigned subjects only.</p>
-        <form method="POST" action="{{ route('teacher.results.publish-quizzes') }}">
+        <form method="POST" action="{{ route('teacher.results.publish-quizzes', ['subject_id' => $selectedSubjectId]) }}">
             @csrf
             <button class="btn btn-primary">
                 <i class="bi bi-send-check me-1"></i>Publish All Pending Quiz Results
@@ -94,7 +120,7 @@
                                 @endif
                             </td>
                             <td class="pe-4">
-                                <form method="POST" action="{{ route('teacher.results.grade-assignment', $submission->id) }}" class="d-flex flex-column flex-md-row gap-2 justify-content-end">
+                                <form method="POST" action="{{ route('teacher.results.grade-assignment', ['submission' => $submission->id, 'subject_id' => $selectedSubjectId]) }}" class="d-flex flex-column flex-md-row gap-2 justify-content-end">
                                     @csrf
                                     <input type="number" min="0" max="100" step="0.01" name="score" class="form-control form-control-sm" placeholder="Score" required>
                                     <input type="text" name="feedback" class="form-control form-control-sm" placeholder="Feedback (optional)">

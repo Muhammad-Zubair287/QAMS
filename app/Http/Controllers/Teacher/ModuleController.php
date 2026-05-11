@@ -231,13 +231,35 @@ class ModuleController extends Controller
         return back()->with('success', 'Assignment deadline updated.');
     }
 
-    public function results(): View
+    public function results(Request $request): View
     {
         $context = $this->getTeacherContext();
         $teacher = $context['teacher'];
         $subjectIds = $context['subjects']->pluck('id');
+        $selectedSubjectId = (int) $request->integer('subject_id');
 
-        $quizAttempts = QuizAttempt::whereHas('quiz', function ($query) use ($teacher, $subjectIds): void {
+        if ($selectedSubjectId !== 0 && !$subjectIds->contains($selectedSubjectId)) {
+            $selectedSubjectId = 0;
+        }
+
+        $subjectCards = $context['subjects']->map(function ($subject) use ($teacher) {
+            $quizAttemptCount = QuizAttempt::whereHas('quiz', function ($query) use ($teacher, $subject): void {
+                $query->where('teacher_id', $teacher->id)->where('subject_id', $subject->id);
+            })->count();
+
+            $assignmentSubmissionCount = AssignmentSubmission::whereHas('assignment', function ($query) use ($teacher, $subject): void {
+                $query->where('teacher_id', $teacher->id)->where('subject_id', $subject->id);
+            })->count();
+
+            return [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'quiz_attempt_count' => $quizAttemptCount,
+                'assignment_submission_count' => $assignmentSubmissionCount,
+            ];
+        });
+
+        $quizAttemptsQuery = QuizAttempt::whereHas('quiz', function ($query) use ($teacher, $subjectIds): void {
             $query->where('teacher_id', $teacher->id)->whereIn('subject_id', $subjectIds);
         })
             ->select(['id', 'quiz_id', 'student_id', 'score', 'total_marks', 'submitted_at', 'published_at'])
@@ -246,10 +268,17 @@ class ModuleController extends Controller
                 'quiz.subject:id,name,class_id',
                 'student:id,name,user_name',
             ])
-            ->orderByDesc('submitted_at')
-            ->get();
+            ->orderByDesc('submitted_at');
 
-        $assignmentSubmissions = AssignmentSubmission::whereHas('assignment', function ($query) use ($teacher, $subjectIds): void {
+        if ($selectedSubjectId !== 0) {
+            $quizAttemptsQuery->whereHas('quiz', function ($query) use ($selectedSubjectId): void {
+                $query->where('subject_id', $selectedSubjectId);
+            });
+        }
+
+        $quizAttempts = $quizAttemptsQuery->get();
+
+        $assignmentSubmissionsQuery = AssignmentSubmission::whereHas('assignment', function ($query) use ($teacher, $subjectIds): void {
             $query->where('teacher_id', $teacher->id)->whereIn('subject_id', $subjectIds);
         })
             ->select(['id', 'assignment_id', 'student_id', 'score', 'feedback', 'submitted_at', 'graded_at', 'published_at'])
@@ -258,12 +287,21 @@ class ModuleController extends Controller
                 'assignment.subject:id,name,class_id',
                 'student:id,name,user_name',
             ])
-            ->orderByDesc('submitted_at')
-            ->get();
+            ->orderByDesc('submitted_at');
+
+        if ($selectedSubjectId !== 0) {
+            $assignmentSubmissionsQuery->whereHas('assignment', function ($query) use ($selectedSubjectId): void {
+                $query->where('subject_id', $selectedSubjectId);
+            });
+        }
+
+        $assignmentSubmissions = $assignmentSubmissionsQuery->get();
 
         return view('teacher.results.index', $context + [
             'quizAttempts' => $quizAttempts,
             'assignmentSubmissions' => $assignmentSubmissions,
+            'subjectCards' => $subjectCards,
+            'selectedSubjectId' => $selectedSubjectId,
         ]);
     }
 
@@ -323,13 +361,35 @@ class ModuleController extends Controller
         return back()->with('success', 'Assignment submission graded successfully.');
     }
 
-    public function performance(): View
+    public function performance(Request $request): View
     {
         $context = $this->getTeacherContext();
         $teacher = $context['teacher'];
         $subjectIds = $context['subjects']->pluck('id');
+        $selectedSubjectId = (int) $request->integer('subject_id');
 
-        $quizPerformance = QuizAttempt::query()
+        if ($selectedSubjectId !== 0 && !$subjectIds->contains($selectedSubjectId)) {
+            $selectedSubjectId = 0;
+        }
+
+        $subjectCards = $context['subjects']->map(function ($subject) use ($teacher) {
+            $quizAttemptCount = QuizAttempt::whereHas('quiz', function ($query) use ($teacher, $subject): void {
+                $query->where('teacher_id', $teacher->id)->where('subject_id', $subject->id);
+            })->count();
+
+            $assignmentSubmissionCount = AssignmentSubmission::whereHas('assignment', function ($query) use ($teacher, $subject): void {
+                $query->where('teacher_id', $teacher->id)->where('subject_id', $subject->id);
+            })->count();
+
+            return [
+                'id' => $subject->id,
+                'name' => $subject->name,
+                'quiz_attempt_count' => $quizAttemptCount,
+                'assignment_submission_count' => $assignmentSubmissionCount,
+            ];
+        });
+
+        $quizPerformanceQuery = QuizAttempt::query()
             ->join('quizzes', 'quizzes.id', '=', 'quiz_attempts.quiz_id')
             ->join('subjects', 'subjects.id', '=', 'quizzes.subject_id')
             ->where('quizzes.teacher_id', $teacher->id)
@@ -341,10 +401,15 @@ class ModuleController extends Controller
                 DB::raw('COUNT(quiz_attempts.id) as attempts_count'),
                 DB::raw('COALESCE(AVG(quiz_attempts.score),0) as avg_quiz_score'),
             ])
-            ->orderBy('subjects.name')
-            ->get();
+            ->orderBy('subjects.name');
 
-        $assignmentPerformance = AssignmentSubmission::query()
+        if ($selectedSubjectId !== 0) {
+            $quizPerformanceQuery->where('subjects.id', $selectedSubjectId);
+        }
+
+        $quizPerformance = $quizPerformanceQuery->get();
+
+        $assignmentPerformanceQuery = AssignmentSubmission::query()
             ->join('assignments', 'assignments.id', '=', 'assignment_submissions.assignment_id')
             ->join('subjects', 'subjects.id', '=', 'assignments.subject_id')
             ->where('assignments.teacher_id', $teacher->id)
@@ -356,12 +421,19 @@ class ModuleController extends Controller
                 DB::raw('COUNT(assignment_submissions.id) as submissions_count'),
                 DB::raw('COALESCE(AVG(assignment_submissions.score),0) as avg_assignment_score'),
             ])
-            ->orderBy('subjects.name')
-            ->get();
+            ->orderBy('subjects.name');
+
+        if ($selectedSubjectId !== 0) {
+            $assignmentPerformanceQuery->where('subjects.id', $selectedSubjectId);
+        }
+
+        $assignmentPerformance = $assignmentPerformanceQuery->get();
 
         return view('teacher.performance.index', $context + [
             'quizPerformance' => $quizPerformance,
             'assignmentPerformance' => $assignmentPerformance,
+            'subjectCards' => $subjectCards,
+            'selectedSubjectId' => $selectedSubjectId,
         ]);
     }
 }

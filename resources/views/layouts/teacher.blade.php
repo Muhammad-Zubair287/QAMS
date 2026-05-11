@@ -10,6 +10,7 @@
     <style>
         :root {
             --sidebar-width: 255px;
+            --sidebar-collapsed: 74px;
             --qams-navy: #1e3a5f;
             --qams-navy-dark: #152d4a;
             --qams-accent: #0d6efd;
@@ -34,7 +35,9 @@
             color: #fff;
             z-index: 1040;
             padding-top: var(--topbar-height);
+            transition: width .25s ease;
         }
+        #sidebar.collapsed { width: var(--sidebar-collapsed); }
         .sidebar-brand {
             position: fixed;
             top: 0;
@@ -52,7 +55,13 @@
             text-decoration: none;
             font-weight: 700;
             letter-spacing: .8px;
+            transition: width .25s ease;
         }
+        .sidebar-brand.collapsed { width: var(--sidebar-collapsed); }
+        .brand-text, .nav-label { white-space: nowrap; transition: opacity .2s ease; }
+        .brand-icon { min-width: 18px; }
+        #sidebar.collapsed .nav-label { opacity: 0; pointer-events: none; width: 0; }
+        .sidebar-brand.collapsed .brand-text { opacity: 0; pointer-events: none; width: 0; }
         .nav-link.teacher-nav-link {
             color: rgba(255,255,255,.85);
             border-radius: 10px;
@@ -71,7 +80,9 @@
         #main {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
+            transition: margin-left .25s ease;
         }
+        #main.collapsed { margin-left: var(--sidebar-collapsed); }
         .topbar {
             height: var(--topbar-height);
             background: #fff;
@@ -83,6 +94,11 @@
             position: sticky;
             top: 0;
             z-index: 1030;
+        }
+        .sidebar-toggle-btn {
+            width: 32px; height: 32px; border: 1px solid #dbe2ea; border-radius: 8px; background: #fff; color: #1e3a5f;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 700; line-height: 1;
         }
         .qams-card {
             border: none;
@@ -103,40 +119,40 @@
 </head>
 <body>
     <a href="{{ route('teacher.dashboard') }}" class="sidebar-brand">
-        <i class="bi bi-person-workspace"></i>
-        <span>QAMS Teacher</span>
+        <i class="bi bi-person-workspace brand-icon"></i>
+        <span class="brand-text">QAMS Teacher</span>
     </a>
 
     <aside id="sidebar">
         <ul class="nav flex-column py-3">
             <li class="nav-item">
                 <a class="nav-link teacher-nav-link {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" href="{{ route('teacher.dashboard') }}">
-                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    <i class="bi bi-speedometer2 me-2"></i><span class="nav-label">Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link teacher-nav-link {{ request()->routeIs('teacher.question-bank.*') ? 'active' : '' }}" href="{{ route('teacher.question-bank.index') }}">
-                    <i class="bi bi-journal-text me-2"></i>Question Bank
+                    <i class="bi bi-journal-text me-2"></i><span class="nav-label">Question Bank</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link teacher-nav-link {{ request()->routeIs('teacher.quizzes.*') ? 'active' : '' }}" href="{{ route('teacher.quizzes.index') }}">
-                    <i class="bi bi-ui-checks-grid me-2"></i>Quizzes
+                    <i class="bi bi-ui-checks-grid me-2"></i><span class="nav-label">Quizzes</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link teacher-nav-link {{ request()->routeIs('teacher.assignments.*') ? 'active' : '' }}" href="{{ route('teacher.assignments.index') }}">
-                    <i class="bi bi-file-earmark-text me-2"></i>Assignments
+                    <i class="bi bi-file-earmark-text me-2"></i><span class="nav-label">Assignments</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link teacher-nav-link {{ request()->routeIs('teacher.results.*') ? 'active' : '' }}" href="{{ route('teacher.results.index') }}">
-                    <i class="bi bi-check2-square me-2"></i>Results Publish
+                    <i class="bi bi-check2-square me-2"></i><span class="nav-label">Results Publish</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link teacher-nav-link {{ request()->routeIs('teacher.performance.*') ? 'active' : '' }}" href="{{ route('teacher.performance.index') }}">
-                    <i class="bi bi-graph-up-arrow me-2"></i>Performance Reports
+                    <i class="bi bi-graph-up-arrow me-2"></i><span class="nav-label">Performance Reports</span>
                 </a>
             </li>
         </ul>
@@ -144,7 +160,12 @@
 
     <section id="main">
         <div class="topbar">
-            <div class="fw-semibold text-primary">@yield('title', 'Teacher Panel')</div>
+            <div class="d-flex align-items-center gap-2">
+                <button id="teacherSidebarToggle" class="sidebar-toggle-btn" type="button" title="Toggle Sidebar">
+                    <span id="teacherSidebarToggleIcon">&lsaquo;</span>
+                </button>
+                <div class="fw-semibold text-primary">@yield('title', 'Teacher Panel')</div>
+            </div>
             <div class="d-flex align-items-center gap-3">
                 <span class="small text-muted"><i class="bi bi-person-circle me-1"></i>{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -175,6 +196,33 @@
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.getElementById('main');
+            const toggle = document.getElementById('teacherSidebarToggle');
+            const brand = document.querySelector('.sidebar-brand');
+            const icon = document.getElementById('teacherSidebarToggleIcon');
+            const key = 'teacherSidebarCollapsed';
+
+            if (!sidebar || !main || !toggle || !icon || window.innerWidth <= 991) return;
+
+            const applyState = (collapsed) => {
+                sidebar.classList.toggle('collapsed', collapsed);
+                main.classList.toggle('collapsed', collapsed);
+                brand.classList.toggle('collapsed', collapsed);
+                icon.innerHTML = collapsed ? '&rsaquo;' : '&lsaquo;';
+            };
+
+            applyState(localStorage.getItem(key) === 'true');
+
+            toggle.addEventListener('click', () => {
+                const collapsed = !sidebar.classList.contains('collapsed');
+                applyState(collapsed);
+                localStorage.setItem(key, collapsed ? 'true' : 'false');
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 </html>
