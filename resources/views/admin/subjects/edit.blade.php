@@ -1,4 +1,8 @@
 {{-- Admin: Edit Subject — QAMS --}}
+@php
+/** @var \App\Models\Subject $subject */
+/** @var \Illuminate\Support\Collection|\App\Models\Classes[] $classes */
+@endphp
 @extends('layouts.admin')
 @section('title', 'Edit Subject')
 

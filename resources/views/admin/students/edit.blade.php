@@ -1,4 +1,10 @@
 {{-- Admin: Edit Student — QAMS --}}
+@php
+/** @var \App\Models\User $student */
+/** @var \Illuminate\Support\Collection|\App\Models\Subject[] $subjects */
+/** @var \Illuminate\Support\Collection|\App\Models\Classes[] $classes */
+/** @var int[] $enrolledIds */
+@endphp
 @extends('layouts.admin')
 @section('title', 'Edit Student')
 

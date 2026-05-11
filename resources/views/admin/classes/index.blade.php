@@ -1,4 +1,7 @@
 {{-- Admin: Classes List — QAMS --}}
+@php
+/** @var \Illuminate\Database\Eloquent\Collection|\App\Models\Classes[] $classes */
+@endphp
 @extends('layouts.admin')
 @section('title', 'Classes')
 
